@@ -23,4 +23,5 @@
 hs_err_pid*
 
 .idea
-src/main/java/apikey.txt
+src/main/resources/apikey.txt
+/target
