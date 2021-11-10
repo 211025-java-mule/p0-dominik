@@ -1,12 +1,7 @@
-import sun.misc.IOUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 
 /* TODOs
 connect to API
@@ -17,50 +12,59 @@ add logging
 add flags
  */
 public class FoodHelper {
-    private String API_KEY = "";
+    private String X_APP_ID = "";
+    private String X_APP_KEY = "";
+    private ObjectMapper mapper = new ObjectMapper();
     public static void main(String[] args) {
         FoodHelper foodHelper = new FoodHelper();
-        foodHelper.getAPIKey();
+        foodHelper.getAPIKeys();
         foodHelper.connectToAPI();
     }
 
     private void connectToAPI() {
-        URL url = null;
+        /*BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        String query = null;
         try {
-            url = new URL("https://api.nal.usda.gov/fdc/v1/foods/list?api_key=" + API_KEY);
-        } catch (MalformedURLException e) {
+            query = reader.readLine();
+        } catch (IOException e) {
             e.printStackTrace();
-        }
-        HttpURLConnection connection = null;
+        }*/
+        String command = "curl -X POST \"https://trackapi.nutritionix.com/v2/natural/nutrients\" -H  \"accept: application/json\" -H  \"x-app-id: 8d1bd058\" -H  \"x-app-key: 4b105532dbaf1546f254494b4dcf6a23\" -H  \"x-remote-user-id: 0\" -H  \"Content-Type: application/json\" -d \"{  \\\"query\\\": \\\"1 big mac\\\"}\"";
+                /*"curl -X POST \"https://trackapi.nutritionix.com/v2/natural/nutrients\" -H  " +
+                "\"accept: application/json\" -H  \"x-app-id: " + X_APP_ID + "\" -H  " +
+                "\"x-app-key:" + X_APP_KEY + "\" -H  \"x-remote-user-id: 0\" -H  " +
+                "\"Content-Type: application/json\" -d \"{  \\\"query\\\": \\\"" + query + "\\\"}";*/
+        Process process = null;
         try {
-            connection = (HttpURLConnection) url.openConnection();
+            process = Runtime.getRuntime().exec(command);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        InputStream response = null;
-        try {
-            response = connection.getInputStream();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        BufferedReader response = new BufferedReader(new InputStreamReader(process.getInputStream()));
         String body = null;
-        try {
-            byte[] bytes = new byte[(int) response.available()];
-            DataInputStream dataInputStream = new DataInputStream(response);
-            dataInputStream.readFully(bytes);
-            body = new String(bytes, StandardCharsets.UTF_8);
-            System.out.println(body.length());
+        while(true) {
+            try {
+                if (!((body = response.readLine()) != null)) break;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             System.out.println(body);
-        } catch (IOException e) {
+        }
+        try {
+            int exitValue = process.waitFor();
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    private void getAPIKey() {
+    private void getAPIKeys() {
         ClassLoader classLoader = FoodHelper.class.getClassLoader();
-        InputStream inputStream = classLoader.getResourceAsStream("apikey.txt");
-        API_KEY = readFromFile(inputStream);
-        //System.out.println(API_KEY);
+        InputStream inputStream = classLoader.getResourceAsStream("app_key.txt");
+        X_APP_KEY = readFromFile(inputStream);
+        inputStream = classLoader.getResourceAsStream("app_id.txt");
+        X_APP_ID = readFromFile(inputStream);
+//        System.out.println(X_APP_KEY);
+//        System.out.println(X_APP_ID);
     }
 
     private static String readFromFile(InputStream filename) {
@@ -75,13 +79,5 @@ public class FoodHelper {
             e.printStackTrace();
         }
         return resultStringBuilder.toString();
-    }
-
-    public void setAPI_KEY(String API_KEY) {
-        this.API_KEY = API_KEY;
-    }
-
-    public void getFoodByName(String name) {
-
     }
 }

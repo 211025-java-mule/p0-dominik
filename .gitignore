@@ -23,5 +23,5 @@
 hs_err_pid*
 
 .idea
-src/main/resources/apikey.txt
+src/main/resources
 /target
