@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.sql.*;
+import java.util.ArrayList;
 
 public class FoodHelper {
     private static Logger logger;
@@ -15,6 +16,9 @@ public class FoodHelper {
     private String X_APP_KEY;
     private final ObjectMapper mapper;
 
+    /**
+     * Class constructor. Start setup.
+     */
     public FoodHelper() {
         logger = LogManager.getLogger();
         X_APP_ID = "";
@@ -31,15 +35,23 @@ public class FoodHelper {
         }
     }
 
+    /**
+     * Fetches API access connection info from files.
+     */
     public void getAPIKeys() {
         ClassLoader classLoader = FoodHelper.class.getClassLoader();
         InputStream inputStream = classLoader.getResourceAsStream("app_id.txt");
         X_APP_ID = readFromFile(inputStream);
         inputStream = classLoader.getResourceAsStream("app_key.txt");
         X_APP_KEY = readFromFile(inputStream);
-        logger.debug("Gotten keys");
+        logger.debug("Keys fetched correctly");
     }
 
+    /**
+     * Reads data from file, returns it as String object.
+     * @param filename name of file to read from
+     * @return file content converted into String
+     */
     public static String readFromFile(InputStream filename) {
         StringBuilder resultStringBuilder = new StringBuilder();
         try {
@@ -54,6 +66,14 @@ public class FoodHelper {
         return resultStringBuilder.toString();
     }
 
+    /**
+     * Reads input from console, fetches data from API using provided necessary access values. Converts API output to
+     * Food object. Uses CURL to fetch data.
+     * @param app_id object created from console input
+     * @param app_key Statement object created in connectToDatabase method
+     * @param query input from console that is later used to fetch data from API
+     * @return Food object created from console input
+     */
     public Food fetchDataFromAPI(String app_id, String app_key, String query) {
         if (query == null) {
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
@@ -80,9 +100,9 @@ public class FoodHelper {
         } catch (IOException e) {
             logger.error("Cannot read response!\n");
         }
-        System.out.println(body);
+//        System.out.println(body);
         try {
-            int exitValue = process.waitFor();
+            process.waitFor();
         } catch (InterruptedException e) {
             logger.error("Cannot exit response reader!\n");
         }
@@ -95,45 +115,77 @@ public class FoodHelper {
         } catch (JsonProcessingException e) {
             logger.error("Cannot read response into Food Object!\n");
         }
-        FoodElement[] foods = output.getFoods();
+        ArrayList<FoodElement> foods = new ArrayList<>();
+        foods.addAll(output.getFoods());
         try {
-            for (int i = 0; i < foods.length; i++) {
-                System.out.println(foods[i].toString());
+            for (int i = 0; i < foods.size(); i++) {
+                System.out.println(foods.get(i).displayValues());
             }
         } catch (NullPointerException e) {
             logger.error("Couldn't get a food from name provided!");
         }
+        connectToDatabase(foods);
         return output;
     }
 
-    public void connectToDatabase(FoodElement foodElement) {
+    /**
+     * Connects to database setup in docker, creates food table in database (if doesn't exist already).
+     * @param foodElements object array created from console input
+     */
+    public void connectToDatabase(ArrayList <FoodElement> foodElements) {
         try {
-            Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/food",
-                    "dominik", "123");
-            PreparedStatement preparedStatement = connection.prepareStatement("insert into " +
-                    "food(name, weightGrams, calories, fat, saturatedFat, cholesterol, sodium, carbohydrate," +
-                    "dietaryFiber, sugars, protein, potassium) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            preparedStatement.setString(1, foodElement.getFood_name());
-            preparedStatement.setLong(2, foodElement.getServing_weight_grams());
-            preparedStatement.setLong(3, foodElement.getNf_calories());
-            preparedStatement.setLong(4, foodElement.getNf_total_fat());
-            preparedStatement.setLong(5, foodElement.getNf_saturated_fat());
-            preparedStatement.setLong(6, foodElement.getNf_cholesterol());
-            preparedStatement.setLong(7, foodElement.getNf_sodium());
-            preparedStatement.setLong(8, foodElement.getNf_total_carbohydrate());
-            preparedStatement.setLong(9, foodElement.getNf_dietary_fiber());
-            preparedStatement.setLong(10, foodElement.getNf_sugars());
-            preparedStatement.setLong(11, foodElement.getNf_protein());
-            preparedStatement.setObject(12, foodElement.getNf_potassium());
+            Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres",
+                    "postgres", "postgres");
+            Statement statement = connection.createStatement();
+            statement.execute("create table if not exists food(name varchar(100), weight_in_grams int, " +
+                    "calories int, fat int, saturated_fat int, cholesterol int, sodium int, carbohydrate int," +
+                    "dietary_fiber int, sugars int, protein int)");
+            for(int i=0; i< foodElements.size(); i++) {
+                addDataToDatabase(foodElements.get(i), statement);
+            }
+            /*ResultSet resultSet = statement.executeQuery("select * from food");
+            while(resultSet.next()) {
+                System.out.println("SQL: " + resultSet.getString("title"));
+            }
+            resultSet.close();*/
+            statement.close();
+            connection.close();
         } catch (SQLException e) {
-            logger.debug("Cannot connect to database");
+            logger.error("Cannot connect to database");
         }
     }
 
+    /**
+     * Adds row to database. Row contains information on inputted food(s) from console.
+     * @param foodElement object created from console input
+     * @param statement Statement object created in connectToDatabase method
+     */
+    public void addDataToDatabase(FoodElement foodElement, Statement statement) {
+        try {
+            statement.execute("insert into food(name, weight_in_grams, calories, fat, saturated_fat, cholesterol, " +
+                    "sodium, carbohydrate, dietary_fiber, sugars, protein) values ('" + foodElement.getFood_name() +
+                    "', '" + foodElement.getServing_weight_grams() + "', '" + foodElement.getNf_calories() + "', '" +
+                    foodElement.getNf_total_fat() + "', '" + foodElement.getNf_saturated_fat() + "', '" +
+                    foodElement.getNf_cholesterol() + "', '" + foodElement.getNf_sodium() + "', '" +
+                    foodElement.getNf_total_carbohydrate() + "', '" + foodElement.getNf_dietary_fiber() + "', '" +
+                    foodElement.getNf_sugars() + "', '" + foodElement.getNf_protein() + "')");
+        } catch (SQLException e) {
+            logger.error("Cannot add object to table");
+        }
+    }
+
+    /**
+     * Returns x_app_id value required when connect to API.
+     * @return  x_app_id value
+     */
     public String getX_APP_ID() {
         return X_APP_ID;
     }
 
+    /**
+     * Returns x_app_key value required when connect to API.
+     * @return  x_app_key value
+     */
     public String getX_APP_KEY() {
         return X_APP_KEY;
     }

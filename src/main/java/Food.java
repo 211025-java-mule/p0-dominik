@@ -1,8 +1,10 @@
 // Fetched from app.quicktype.io website due to JSON's complexity
 
-public class Food {
-    private FoodElement[] foods;
+import java.util.ArrayList;
 
-    public FoodElement[] getFoods() { return foods; }
-    public void setFoods(FoodElement[] value) { this.foods = value; }
+public class Food {
+    private ArrayList<FoodElement> foods;
+
+    public ArrayList<FoodElement> getFoods() { return foods; }
+    public void setFoods(ArrayList<FoodElement> value) { this.foods = value; }
 }

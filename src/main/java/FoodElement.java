@@ -22,6 +22,7 @@ public class FoodElement {
     private long nf_dietary_fiber;
     private long nf_sugars;
     private long nf_protein;
+    @JsonIgnore
     private Object nf_potassium;
     @JsonIgnore
     private Object nf_p;
@@ -116,19 +117,29 @@ public class FoodElement {
 
     @Override
     public String toString() {
-        return "FoodElement{" +
-                "food_name='" + food_name + '\'' +
-                ", serving_weight_grams=" + serving_weight_grams +
-                ", nf_calories=" + nf_calories +
-                ", nf_total_fat=" + nf_total_fat +
-                ", nf_saturated_fat=" + nf_saturated_fat +
-                ", nf_cholesterol=" + nf_cholesterol +
-                ", nf_sodium=" + nf_sodium +
-                ", nf_total_carbohydrate=" + nf_total_carbohydrate +
-                ", nf_dietary_fiber=" + nf_dietary_fiber +
-                ", nf_sugars=" + nf_sugars +
-                ", nf_protein=" + nf_protein +
-                ", nf_potassium=" + nf_potassium +
-                '}';
+        return food_name + ", " + serving_weight_grams +
+                ", " + nf_calories +
+                ", " + nf_total_fat +
+                ", " + nf_saturated_fat +
+                ", " + nf_cholesterol +
+                ", " + nf_sodium +
+                ", " + nf_total_carbohydrate +
+                ", " + nf_dietary_fiber +
+                ", " + nf_sugars +
+                ", " + nf_protein;
+    }
+
+    public String displayValues() {
+        return "Food name: " + food_name + "\n" +
+                "Serving weight (g): " + serving_weight_grams + "\n" +
+                "Calories (kcal): " + nf_calories + "\n" +
+                "Fat (g): " + nf_total_fat + "\n" +
+                "Saturated fat (g): " + nf_saturated_fat + "\n" +
+                "Cholesterol (mg): " + nf_cholesterol + "\n" +
+                "Sodium (mg): " + nf_sodium + "\n" +
+                "Carbohydrate (g): " + nf_total_carbohydrate + "\n" +
+                "Dietary fiber (g): " + nf_dietary_fiber + "\n" +
+                "Sugars (g): " + nf_sugars + "\n" +
+                "Protein (g): " + nf_protein + "\n";
     }
 }
