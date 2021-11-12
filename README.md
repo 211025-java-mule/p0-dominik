@@ -1,6 +1,6 @@
 # FoodHelper app
 
-FoodHelper app is designed to help you track nutrients from foods you consumed. It has easy to get used to UI, very
+FoodHelper app is a CLI app designed to help you track nutrients from foods you consumed. It has easy to get used to UI, very
 easy input form. After running the program just answer the question with what u ate, any form u want! U can list
 multiple products and the program will return nutrient values.
 
