@@ -21,7 +21,7 @@ Suggested running in IDE, preferably IntellIJ.
 
 Setup DB
 
-> docker run -it --rm -e POSTGRES_PASSWORD=`password` `server_name`
+> docker run -p 5432:5432 -it --rm -e POSTGRES_PASSWORD=`password` `server_name`
 
 Check DB state
 
